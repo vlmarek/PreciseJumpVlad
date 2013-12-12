@@ -185,8 +185,15 @@ endfunction
 "{{{ function! s:CreateHighlightRegex(coords)
 function! s:CreateHighlightRegex(coords)
     let tmp = []
+    let l:last = -1
     for [l, b, c] in s:Flatten(a:coords)
-        call add(tmp, '\%' . l . 'l\%' . b . 'c')
+       if l:last != l | let l:sub = 0 | let l:last = l | endif
+        call add(tmp, '\%' . l . 'l\%' . (b-l:sub) . 'c')
+        let l:line = getline(l)
+        let l:next_char_index = byteidx(l:line, c+1)
+        if l:next_char_index != -1
+           let l:sub += l:next_char_index - byteidx(l:line, c) - 1 " 1 is width of the char we place there
+        endif
     endfor
     return join(tmp, '\|')
 endfunction
