@@ -267,7 +267,14 @@ function! s:AskForTarget(groups) abort
         let user_char = nr2char( getchar() )
         redraw
     finally
+        let l:before = line("w0")
         normal! u
+        let l:after = line("w0")
+        if l:before > l:after
+            exec "normal! ".(l:before-l:after)."\<c-d>"
+        elseif l:before < l:after
+            exec "normal! ".(l:after-l:before)."\<c-u>"
+        endif
         normal 
 
         call matchdelete(match_id)
