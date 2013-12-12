@@ -130,11 +130,21 @@ function! s:FindTargets(re, line_numbers)
     let targets = []
     for l in a:line_numbers
         let n = 1
-        let match_start = match(getline(l), a:re, 0, 1)
+        let char_position = 0
+        let line = getline(l)
+        let match_start = match(line, a:re, 0, n)
         while match_start != -1
-            call add(targets, [l, match_start + 1])
-            let n += 1
-            let match_start = match(getline(l), a:re, 0, n)
+          " Find character ofset equal to byte ofset returned by match()
+          while 1
+            let idx = byteidx(line, char_position)
+            if idx == -1 | echoerr "Can't find requested character" | break | endif
+            if idx == match_start | break | endif
+            let char_position += 1
+          endwhile
+          call add(targets, [l, match_start + 1, char_position])
+          let n += 1
+          let char_position += 1
+          let match_start = match(line, a:re, 0, n)
         endwhile
     endfor
     return targets
@@ -161,7 +171,7 @@ endfunction
 function! s:GetLinesFromCoordList(list)
     let lines_seen = {}
     let lines_no = []
-    for [l, c] in a:list
+    for [l, b, c] in a:list
         if !has_key(lines_seen, l)
             call add(lines_no, l)
             let lines_seen[l] = 1
@@ -175,8 +185,8 @@ endfunction
 "{{{ function! s:CreateHighlightRegex(coords)
 function! s:CreateHighlightRegex(coords)
     let tmp = []
-    for [l, c] in s:Flatten(a:coords)
-        call add(tmp, '\%' . l . 'l\%' . c . 'c')
+    for [l, b, c] in s:Flatten(a:coords)
+        call add(tmp, '\%' . l . 'l\%' . b . 'c')
     endfor
     return join(tmp, '\|')
 endfunction
@@ -220,9 +230,9 @@ function! s:AskForTarget(groups) abort
     let gr = 0 " group no
     for group in a:groups
         let el = 0 " element in group no
-        for [l, c] in group
+        for [l, b, c] in group
             " highlighting with group mark or target mark
-            let lines_with_markers[l][c - 1] = s:index_to_key[ single_group ? el : gr ]
+            let lines_with_markers[l][c] = s:index_to_key[ single_group ? el : gr ]
             let el += 1
         endfor
         let gr += 1
@@ -358,11 +368,11 @@ function! PreciseJump(re, lines_prev, lines_next, vismode)
 
     let coords = s:AskForTarget(groups)
 
-    if len(coords) != 2
+    if len(coords) != 3
         echo "Cancelled"
         return
     else
-        call s:JumpToCoords(coords[0], coords[1], a:vismode)
+        call s:JumpToCoords(coords[0], coords[2]+1, a:vismode)
     endif
 endfunction
 "}}}
