@@ -182,24 +182,6 @@ endfunction
 "}}}
 
 "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-"{{{ function! s:CreateHighlightRegex(coords)
-function! s:CreateHighlightRegex(coords)
-    let tmp = []
-    let l:last = -1
-    for [l, b, c] in s:Flatten(a:coords)
-       if l:last != l | let l:sub = 0 | let l:last = l | endif
-        call add(tmp, '\%' . l . 'l\%' . (b-l:sub) . 'c')
-        let l:line = getline(l)
-        let l:next_char_index = byteidx(l:line, c+1)
-        if l:next_char_index != -1
-           let l:sub += l:next_char_index - byteidx(l:line, c) - 1 " 1 is width of the char we place there
-        endif
-    endfor
-    return join(tmp, '\|')
-endfunction
-"}}}
-
-"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 "{{{ function! s:Flatten(list)
 function! s:Flatten(list)
     let res = []
@@ -235,20 +217,28 @@ function! s:AskForTarget(groups) abort
 
    " adding markers to lines
     let gr = 0 " group no
+    let l:current_line = -1
+    let l:hi_regex_array = []
     for group in a:groups
         let el = 0 " element in group no
         for [l, b, c] in group
+            if l:current_line != l | let l:correct_offset = 0 | let l:current_line = l | endif
             " highlighting with group mark or target mark
-            let lines_with_markers[l][c] = s:index_to_key[ single_group ? el : gr ]
+            call add(l:hi_regex_array, '\%' . l . 'l\%' . (b-l:correct_offset) . 'c')
+            let l:tmp_line = getline(l)
+            let l:next_char_index = byteidx(l:tmp_line, c+1)
+            let l:replace_char = s:index_to_key[ single_group ? el : gr ]
+            if l:next_char_index != -1
+               let l:correct_offset += l:next_char_index - byteidx(l:tmp_line, c)
+               let l:correct_offset -= byteidx(l:replace_char, 1)
+            endif
+            let lines_with_markers[l][c] = l:replace_char
             let el += 1
         endfor
         let gr += 1
     endfor
+    let hi_regex =  join(l:hi_regex_array, '\|')
 
-   " create highlight
-    let hi_regex = s:CreateHighlightRegex(a:groups)
-
-    "
     let user_char = ''
     let modifiable = &modifiable
     let readonly = &readonly
