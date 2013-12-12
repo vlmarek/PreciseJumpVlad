@@ -244,7 +244,8 @@ function! s:AskForTarget(groups) abort
     let readonly = &readonly
 
     try
-        let match_id = matchadd(g:PreciseJump_match_target_hi, hi_regex, -1)
+        let shade_id = matchadd('SpecialKey', '\%'.line('w0').'l\_.*\%'.line('w$').'l', -1)
+        let match_id = matchadd(g:PreciseJump_match_target_hi, hi_regex, 0)
         if modifiable == 0
             silent setl modifiable
         endif
@@ -275,6 +276,7 @@ function! s:AskForTarget(groups) abort
         normal 
 
         call matchdelete(match_id)
+        call matchdelete(shade_id)
         redraw
         if modifiable == 0
             silent setl nomodifiable
