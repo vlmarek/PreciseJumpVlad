@@ -29,6 +29,9 @@ hi PreciseJumpTarget   ctermfg=yellow ctermbg=red cterm=bold gui=bold guibg=Red 
 if !exists('g:PreciseJump_match_target_hi')
     let g:PreciseJump_match_target_hi = 'PreciseJumpTarget'
 endif
+if !exists('g:PreciseJump_shadow_hi')
+    let g:PreciseJump_shadow_hi = 'SpecialKey'
+endif
 
 nmap _F :call PreciseJumpF(0, 0, 0)<cr>
 vmap _F <ESC>:call PreciseJumpF(0, 0, 1)<cr>
@@ -193,8 +196,8 @@ endfunction
 "}}}
 
 "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-" get a list of coordinates groups [   [ [1,2], [2,5] ], [ [2,2] ]  ]
-" get a list of coordinates groups [   [ [1,2], [2,5] ]  ]
+" get a list of coordinates groups [   [ [1,2,2], [2,5,8] ], [ [2,2,3] ]  ]
+" get a list of coordinates groups [   [ [1,2,2], [2,5,8] ]  ]
 "{{{ function! s:AskForTarget(group)
 function! s:AskForTarget(groups) abort
     let single_group = ( len(a:groups) == 1 ? 1 : 0 )
@@ -215,7 +218,7 @@ function! s:AskForTarget(groups) abort
         let lines_with_markers[l] = split(getline(l), '\zs')
     endfor
 
-   " adding markers to lines
+    " adding markers to lines
     let gr = 0 " group no
     let l:current_line = -1
     let l:hi_regex_array = []
@@ -244,7 +247,9 @@ function! s:AskForTarget(groups) abort
     let readonly = &readonly
 
     try
-        let shade_id = matchadd('SpecialKey', '\%'.line('w0').'l\_.*\%'.line('w$').'l', -1)
+        if strlen(g:PreciseJump_shadow_hi) > 0
+            let shade_id = matchadd(g:PreciseJump_shadow_hi, '\%'.line('w0').'l\_.*\%'.line('w$').'l', -1)
+        endif
         let match_id = matchadd(g:PreciseJump_match_target_hi, hi_regex, 0)
         if modifiable == 0
             silent setl modifiable
@@ -276,7 +281,9 @@ function! s:AskForTarget(groups) abort
         normal 
 
         call matchdelete(match_id)
-        call matchdelete(shade_id)
+        if strlen(g:PreciseJump_shadow_hi) > 0
+            call matchdelete(shade_id)
+        endif
         redraw
         if modifiable == 0
             silent setl nomodifiable

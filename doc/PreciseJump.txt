@@ -82,6 +82,10 @@ Variable g:PreciseJump_match_target_hi contains names of highlight group that
 will be used to mark jump targets. By default it is the group PreciseJumpTarget
 defined in the script (red background, yellow foreground)
 
+Variable g:PreciseJump_shadow_hi contains name of highlight group used to
+"shadow" all un-highlighted characters. It's set to 'SpecialKey' by default.
+When set to empty string, no shadowing will be performed.
+
 
 ======
 4.3 PreciseJump invocation
