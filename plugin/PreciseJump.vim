@@ -109,8 +109,7 @@ endfunction
 " jump to l-th line and c-th column
 "{{{ function! s:JumpToCoords(l, c, vismode)
 function! s:JumpToCoords(l, c, vismode)
-    let ve = &virtualedit
-    setl virtualedit=""
+    call s:VarReset('virtualedit', "")
     if a:vismode
         execute "normal! gv"
     endif
@@ -119,8 +118,8 @@ function! s:JumpToCoords(l, c, vismode)
     if a:c > 1
         execute "normal! " . (a:c - 1) . "l"
     endif
-    execute "silent setl virtualedit=" . ve
     echo "Jumping to [" . a:l . ", " . a:c . "]"
+    s:VarReset('virtualedit');
 endfunction
 "}}}
 
@@ -195,6 +194,27 @@ function! s:Flatten(list)
 endfunction
 "}}}
 
+function! s:VarReset(var, ...) " {{{
+    if ! exists('s:var_reset')
+        let s:var_reset = {}
+    endif
+
+    let buf = bufname("")
+
+    if a:0 == 0 && has_key(s:var_reset, a:var)
+        " Reset var to original value
+        call setbufvar(buf, a:var, s:var_reset[a:var])
+    elseif a:0 == 1
+        let new_value = a:0 == 1 ? a:1 : ''
+
+        " Store original value
+        let s:var_reset[a:var] = getbufvar(buf, a:var)
+
+        " Set new var value
+        call setbufvar(buf, a:var, new_value)
+    endif
+endfunction
+" }}}
 "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 " get a list of coordinates groups [   [ [1,2,2], [2,5,8] ], [ [2,2,3] ]  ]
 " get a list of coordinates groups [   [ [1,2,2], [2,5,8] ]  ]
@@ -243,20 +263,14 @@ function! s:AskForTarget(groups) abort
     let hi_regex =  join(l:hi_regex_array, '\|')
 
     let user_char = ''
-    let modifiable = &modifiable
-    let readonly = &readonly
 
     try
         if strlen(g:PreciseJump_shadow_hi) > 0
             let shade_id = matchadd(g:PreciseJump_shadow_hi, '\%'.line('w0').'l\_.*\%'.line('w$').'l', -1)
         endif
         let match_id = matchadd(g:PreciseJump_match_target_hi, hi_regex, 0)
-        if modifiable == 0
-            silent setl modifiable
-        endif
-        if readonly == 1
-            silent setl noreadonly
-        endif
+        call s:VarReset('modifiable', 1)
+        call s:VarReset('readonly', 1)
 
         for [lnum, line_arr] in items(lines_with_markers)
             call setline(lnum, join(line_arr, ''))
@@ -285,12 +299,8 @@ function! s:AskForTarget(groups) abort
             call matchdelete(shade_id)
         endif
         redraw
-        if modifiable == 0
-            silent setl nomodifiable
-        endif
-        if readonly == 1
-            silent setl readonly
-        endif
+        call s:VarReset('modifiable')
+        call s:VarReset('readonly')
 
         if ! has_key(s:key_to_index, user_char) || s:key_to_index[user_char] >= targets_count
             return []
