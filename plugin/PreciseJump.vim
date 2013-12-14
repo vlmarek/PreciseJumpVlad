@@ -118,7 +118,7 @@ function! s:JumpToCoords(l, c, vismode)
     if a:c > 1
         execute "normal! " . (a:c - 1) . "l"
     endif
-    echo "Jumping to [" . a:l . ", " . a:c . "]"
+    echon "Jumping to [" . a:l . ", " . a:c . "]"
     s:VarReset('virtualedit');
 endfunction
 "}}}
