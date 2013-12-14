@@ -215,6 +215,36 @@ function! s:VarReset(var, ...) " {{{
     endif
 endfunction
 " }}}
+
+" Function : SaveCursorPositon (PRIVATE)
+" Purpose  : Returns current window and cursor positon
+" Args     : nothing
+" Returns  : List with three elements
+"            * topmost visible line
+"            * current line
+"            * current column
+" Author   : Vladimir Marek <vlmarek@volny.cz>
+" History  :
+function s:SaveCursorPositon()
+    return [ line("w0"), line("."), virtcol(".") ]
+endfunction
+
+
+" Function : RestoreCursorPosition (PRIVATE)
+" Purpose  : Tries to restore window position from values returned by SaveCursorPositon
+" Args     : List with three elements
+"            * topmost visible line
+"            * current line
+"            * current column
+" Returns  : nothing
+" Author   : Vladimir Marek <vlmarek@volny.cz>
+" History  : Added support for scrolloff option
+function s:RestoreCursorPosition (position)
+    exe "norm! ".(a:position[0] + &scrolloff)."G0z\<CR>"
+    exe "norm! ".a:position[1] ."G0".a:position[2]."\<bar>"
+endfunction
+
+
 "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 " get a list of coordinates groups [   [ [1,2,2], [2,5,8] ], [ [2,2,3] ]  ]
 " get a list of coordinates groups [   [ [1,2,2], [2,5,8] ]  ]
@@ -222,6 +252,7 @@ endfunction
 function! s:AskForTarget(groups) abort
     let single_group = ( len(a:groups) == 1 ? 1 : 0 )
 
+    let pos = s:SaveCursorPositon()
     " how many targets there is
     let targets_count = single_group ? len(a:groups[0]) : len(a:groups)
 
@@ -284,21 +315,14 @@ function! s:AskForTarget(groups) abort
         let user_char = nr2char( getchar() )
         redraw
     finally
-        let l:before = line("w0")
         normal! u
-        let l:after = line("w0")
-        if l:before > l:after
-            exec "normal! ".(l:before-l:after)."\<c-d>"
-        elseif l:before < l:after
-            exec "normal! ".(l:after-l:before)."\<c-u>"
-        endif
         normal 
 
         call matchdelete(match_id)
         if strlen(g:PreciseJump_shadow_hi) > 0
             call matchdelete(shade_id)
         endif
-        redraw
+        call s:RestoreCursorPosition(pos)
         call s:VarReset('modifiable')
         call s:VarReset('readonly')
 
