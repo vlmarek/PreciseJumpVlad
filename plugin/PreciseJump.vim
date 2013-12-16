@@ -344,39 +344,6 @@ endfunction
 "}}}
 
 "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-"{{{ function! s:LinesAllSequential()
-function! s:LinesAllSequential()
-    return filter( range(line('w0'), line('w$')), 'foldclosed(v:val) == -1' )
-endfunction
-" }}}
-
-"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-"{{{ function! s:LinesSurrondingAll(a:surrounding_lines)
-function! s:LinesSurrondingAll(surrounding_lines)
-    let cur_line = line('.')
-    let line_numbers = [ cur_line ]
-    let i = 1
-    while 1
-        let leave = 1
-        if cur_line - i >= line('w0')
-            call add(line_numbers, cur_line - i)
-            let leave = 0
-        endif
-
-        if cur_line + i <= line('w$')
-            call add(line_numbers, cur_line + i)
-            let leave = 0
-        endif
-
-        if leave
-            break
-        endif
-        let i += 1
-    endwhile
-    return line_numbers
-endfunction
-"}}}
-
 "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
 "{{{ function! s:LinesInRange(lines_prev, lines_next)
 function! s:LinesInRange(lines_prev, lines_next)
