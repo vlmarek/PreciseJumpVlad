@@ -12,3 +12,6 @@ improvements.
 
 Other alternatives
  - https://github.com/joequery/Stupid-EasyMotion
+
+Things to add (TODO):
+   - https://github.com/Lokaltog/vim-easymotion/pull/70
