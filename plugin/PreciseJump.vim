@@ -119,7 +119,7 @@ function! s:JumpToCoords(l, c, vismode)
         execute "normal! " . (a:c - 1) . "l"
     endif
     echon "Jumping to [" . a:l . ", " . a:c . "]"
-    s:VarReset('virtualedit');
+    call s:VarReset('virtualedit')
 endfunction
 "}}}
 
