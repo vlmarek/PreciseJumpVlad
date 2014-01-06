@@ -300,8 +300,8 @@ function! s:AskForTarget(groups) abort
             let shade_id = matchadd(g:PreciseJump_shadow_hi, '\%'.line('w0').'l\_.*\%'.line('w$').'l', -1)
         endif
         let match_id = matchadd(g:PreciseJump_match_target_hi, hi_regex, 0)
-        call s:VarReset('modifiable', 1)
-        call s:VarReset('readonly', 1)
+        call s:VarReset('&modifiable', 1)
+        call s:VarReset('&readonly', 0)
 
         for [lnum, line_arr] in items(lines_with_markers)
             call setline(lnum, join(line_arr, ''))
@@ -323,8 +323,8 @@ function! s:AskForTarget(groups) abort
             call matchdelete(shade_id)
         endif
         call s:RestoreCursorPosition(pos)
-        call s:VarReset('modifiable')
-        call s:VarReset('readonly')
+        call s:VarReset('&modifiable')
+        call s:VarReset('&readonly')
 
         if ! has_key(s:key_to_index, user_char) || s:key_to_index[user_char] >= targets_count
             return []
